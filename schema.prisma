@@ -1,0 +1,119 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+enum Gender {
+  male
+  female
+  other
+}
+
+enum ProductType {
+  food
+  drink
+  other
+}
+
+model users {
+  id         Int       @id @default(autoincrement())
+  email      String
+  username   String
+  phone      String
+  password   String
+  gender     Gender?
+  dob        DateTime?
+  address    String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  orders     orders[]
+}
+
+model buyers {
+  id              Int       @id @default(autoincrement())
+  phone           String
+  username        String
+  activation_code String
+  expired         DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  orders          orders[]
+  ratings         ratings[]
+}
+
+model vouchers {
+  id            Int       @id @default(autoincrement())
+  name          String
+  code          String
+  expired_time  DateTime?
+  quantity_used Int?      @default(0)
+  quantity_max  Int?      @default(0)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model products {
+  id            Int             @id @default(autoincrement())
+  name          String
+  image         String?
+  type          ProductType?
+  price         Float
+  desc          String?
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+
+  detail_orders detail_orders[]
+  ratings       ratings[]
+}
+
+model orders {
+  id         Int            @id @default(autoincrement())
+  order_code String
+  user_id    Int?
+  buyer_id   Int?
+  total      Float
+  desc       String?
+  discount   Float?         @default(0)
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  user    users?    @relation(fields: [user_id], references: [id])
+  buyer   buyers?   @relation(fields: [buyer_id], references: [id])
+  details detail_orders[]
+  ratings ratings[]
+}
+
+model detail_orders {
+  id         Int       @id @default(autoincrement())
+  order_id   Int
+  product_id Int
+  price      Float
+  quantity   Float
+  sub_total  Float
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  order   orders   @relation(fields: [order_id], references: [id])
+  product products @relation(fields: [product_id], references: [id])
+}
+
+model ratings {
+  id         Int       @id @default(autoincrement())
+  order_id   Int
+  product_id Int
+  buyer_id   Int
+  rating     Float
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  order   orders   @relation(fields: [order_id], references: [id])
+  product products @relation(fields: [product_id], references: [id])
+  buyer   buyers   @relation(fields: [buyer_id], references: [id])
+}
